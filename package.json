@@ -1,0 +1,12 @@
+{
+  "name": "feedbackhub-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Producto demo de la sesión Git, Deployment y Producción (AI PM Pro · The Hero Camp)",
+  "type": "module",
+  "scripts": {
+    "dev": "npx wrangler pages dev public",
+    "test": "node --test tests/"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FeedbackHub</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 48px auto; padding: 0 16px; color: #1f2933; }
+    .banner { display: none; background: #f5a623; color: #1f2933; padding: 8px 12px; font-weight: 700; text-align: center; margin-bottom: 24px; }
+    code { background: #f0f2f5; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div id="banner" class="banner">STAGING · entorno de pruebas</div>
+  <h1>FeedbackHub</h1>
+  <p>Esqueleto inicial: la portada lee su configuración de <code>/api/config</code>.</p>
+  <ul>
+    <li>Entorno: <code id="entorno">…</code></li>
+    <li>Valoración (feature flag): <code id="valoracion">…</code></li>
+    <li>Base de datos configurada: <code id="bd">…</code></li>
+  </ul>
+  <script>
+    fetch('/api/config')
+      .then((r) => r.json())
+      .then((c) => {
+        document.getElementById('entorno').textContent = c.appEnv;
+        document.getElementById('valoracion').textContent = c.featureValoracion ? 'activada' : 'desactivada';
+        document.getElementById('bd').textContent = c.supabaseUrl ? 'sí' : 'no';
+        if (c.appEnv !== 'production') document.getElementById('banner').style.display = 'block';
+      })
+      .catch(() => { document.getElementById('entorno').textContent = 'error al leer /api/config'; });
+  </script>
+</body>
+</html>
