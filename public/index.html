@@ -27,6 +27,7 @@
         document.getElementById('valoracion').textContent = c.featureValoracion ? 'activada' : 'desactivada';
         document.getElementById('bd').textContent = c.supabaseUrl ? 'sí' : 'no';
         if (c.appEnv !== 'production') document.getElementById('banner').style.display = 'block';
+        if (c.errorConfig) document.getElementById('bd').textContent = 'ERROR: ' + c.errorConfig;
       })
       .catch(() => { document.getElementById('entorno').textContent = 'error al leer /api/config'; });
   </script>
