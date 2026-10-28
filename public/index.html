@@ -3,33 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FeedbackHub</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 48px auto; padding: 0 16px; color: #1f2933; }
-    .banner { display: none; background: #f5a623; color: #1f2933; padding: 8px 12px; font-weight: 700; text-align: center; margin-bottom: 24px; }
-    code { background: #f0f2f5; padding: 2px 6px; border-radius: 4px; }
-  </style>
+  <title>FeedbackHub · Envía tu feedback</title>
+  <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
+<body class="portada">
   <div id="banner" class="banner">STAGING · entorno de pruebas</div>
-  <h1>FeedbackHub</h1>
-  <p>Esqueleto inicial: la portada lee su configuración de <code>/api/config</code>.</p>
-  <ul>
-    <li>Entorno: <code id="entorno">…</code></li>
-    <li>Valoración (feature flag): <code id="valoracion">…</code></li>
-    <li>Base de datos configurada: <code id="bd">…</code></li>
-  </ul>
-  <script>
-    fetch('/api/config')
-      .then((r) => r.json())
-      .then((c) => {
-        document.getElementById('entorno').textContent = c.appEnv;
-        document.getElementById('valoracion').textContent = c.featureValoracion ? 'activada' : 'desactivada';
-        document.getElementById('bd').textContent = c.supabaseUrl ? 'sí' : 'no';
-        if (c.appEnv !== 'production') document.getElementById('banner').style.display = 'block';
-        if (c.errorConfig) document.getElementById('bd').textContent = 'ERROR: ' + c.errorConfig;
-      })
-      .catch(() => { document.getElementById('entorno').textContent = 'error al leer /api/config'; });
-  </script>
+
+  <div class="container">
+    <h1>FeedbackHub</h1>
+    <p class="subtitle">Ayúdanos a mejorar compartiendo tu feedback</p>
+
+    <form id="feedbackForm" novalidate>
+      <div class="form-group">
+        <label for="email">Tu email</label>
+        <input type="email" id="email" name="email" maxlength="254" required>
+      </div>
+
+      <div class="form-group">
+        <label for="name">Tu nombre</label>
+        <input type="text" id="name" name="name" maxlength="100" required>
+      </div>
+
+      <!-- Feature flag FEATURE_VALORACION: solo se muestra si está activado en este entorno -->
+      <div class="form-group oculto" id="grupoValoracion">
+        <label for="rating">¿Qué valoración nos das?</label>
+        <select id="rating" name="rating">
+          <option value="">Sin valorar</option>
+          <option value="5">5 · Excelente</option>
+          <option value="4">4 · Bien</option>
+          <option value="3">3 · Normal</option>
+          <option value="2">2 · Mejorable</option>
+          <option value="1">1 · Mal</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="message">Tu feedback</label>
+        <textarea id="message" name="message" maxlength="2000" required></textarea>
+      </div>
+
+      <button type="submit" id="enviar">Enviar feedback</button>
+
+      <div id="aviso" class="message" role="status"></div>
+    </form>
+  </div>
+
+  <p class="pie"><a href="/admin.html">Panel de administración</a></p>
+
+  <script type="module" src="/app.js"></script>
 </body>
 </html>
