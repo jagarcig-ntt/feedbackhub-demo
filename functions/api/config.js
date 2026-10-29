@@ -3,7 +3,7 @@
 import { configPublica } from '../../lib/config.js';
 
 export function onRequestGet({ env }) {
-  return Response.json(configPublica(env), {
+  return Response.json(configPublic(env), {
     headers: { 'Cache-Control': 'no-store' },
   });
 }
