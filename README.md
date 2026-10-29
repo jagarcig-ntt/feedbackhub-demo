@@ -38,6 +38,19 @@ Variables (mismo nombre en todos los entornos, distinto valor): `APP_ENV`, `FEAT
 - **Commits:** una sola cosa por commit, con un mensaje que diga qué cambia y por qué.
 - **Antes de salir a producción:** [checklist de go-live](docs/checklist-go-live.md).
 
+## Cómo llega un cambio a producción
+
+Todo lo hace GitHub Actions; nadie despliega desde su ordenador.
+
+| Workflow | Cuándo | Qué hace |
+|---|---|---|
+| **Comprobar el PR** ([`comprobar-pr.yml`](.github/workflows/comprobar-pr.yml)) | Cada PR y cada push a una rama | Pasa las pruebas. Sin secretos: funciona también en tu fork |
+| **Desplegar** ([`desplegar.yml`](.github/workflows/desplegar.yml)) | PR · push a `staging` · merge a `main` | Publica en la preview del PR · en staging · en producción |
+
+- `main` está protegida: solo se entra por PR y con el check "Comprobar el PR" en verde.
+- Cada PR recibe un comentario con su **URL de preview** para probarlo antes del merge.
+- Al abrir un PR, GitHub rellena la [plantilla](.github/pull_request_template.md): qué cambia, por qué, cómo se ha probado, qué pasa si falla y cómo se apaga.
+
 ## Practica con tu propia copia (fork)
 
 1. Arriba a la derecha, **Fork** → crea la copia en tu cuenta de GitHub.

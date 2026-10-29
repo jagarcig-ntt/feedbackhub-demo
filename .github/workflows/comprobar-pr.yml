@@ -1,0 +1,39 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# COMPROBAR EL PR · el control de calidad automático (CI)
+#
+# Cuándo: cada vez que se abre o actualiza un Pull Request, y en cada push
+#         a una rama que no sea main.
+# Qué hace: coge el código, prepara Node y pasa las pruebas.
+# Qué necesita: nada. No usa ningún secreto, así que funciona igual en tu fork.
+#
+# La regla de main exige que este check esté en verde para poder hacer merge.
+# ─────────────────────────────────────────────────────────────────────────────
+name: Comprobar el PR
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+# Solo puede leer el código: no puede cambiar nada del repositorio.
+permissions:
+  contents: read
+
+jobs:
+  comprobar:
+    name: Comprobar el PR          # nombre del check que verás en el PR
+    runs-on: ubuntu-latest         # una máquina limpia de GitHub, cada vez
+    steps:
+      - name: 1. Coger el código
+        uses: actions/checkout@v4
+
+      - name: 2. Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 3. Pasar las pruebas
+        run: npm test
+
+      # 11 de diciembre: aquí añadiremos el check de seguridad
+      # (sesión "Seguridad y buenas prácticas con IA").

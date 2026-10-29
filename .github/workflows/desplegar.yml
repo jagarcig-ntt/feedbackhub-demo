@@ -1,0 +1,104 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# DESPLEGAR · la publicación automática (CD) en Cloudflare Pages
+#
+#   merge (push) a main        →  PRODUCCIÓN   feedbackhub-demo.pages.dev
+#   push a la rama staging     →  STAGING fijo staging-prueba.feedbackhub-demo.pages.dev
+#   Pull Request de este repo  →  PREVIEW de ese PR (la URL se publica en un comentario)
+#
+# Qué necesita: dos secretos de GitHub (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID.
+# En un fork no existen esos secretos, así que este workflow NO se ejecuta allí
+# (aparece como "skipped", en gris): en tu copia solo corre "Comprobar el PR".
+# ─────────────────────────────────────────────────────────────────────────────
+name: Desplegar
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+
+permissions:
+  contents: read
+
+# Si llegan dos despliegues de la misma rama, se publican en orden, sin pisarse.
+concurrency:
+  group: desplegar-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  publicar:
+    name: Publicar en Cloudflare Pages
+    # Solo en el repositorio original y, si es un PR, solo si viene de este mismo repo.
+    if: >-
+      github.repository == 'jagarcig-ntt/feedbackhub-demo' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write        # solo para dejar el comentario con la URL de preview
+    steps:
+      - name: 1. Coger el código
+        uses: actions/checkout@v4
+
+      - name: 2. Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 3. Pasar las pruebas (lo que no está en verde no se publica)
+        run: npm test
+
+      - name: 4. Decidir a qué entorno va
+        id: destino
+        env:
+          EVENTO: ${{ github.event_name }}
+          RAMA_PR: ${{ github.head_ref }}    # nombre de la rama del PR
+          RAMA: ${{ github.ref_name }}       # rama del push
+        run: |
+          if [ "$EVENTO" = "pull_request" ]; then
+            echo "branch=$RAMA_PR"         >> "$GITHUB_OUTPUT"   # preview de este PR
+          elif [ "$RAMA" = "main" ]; then
+            echo "branch=main"             >> "$GITHUB_OUTPUT"   # producción
+          else
+            echo "branch=staging-prueba"   >> "$GITHUB_OUTPUT"   # staging fijo
+          fi
+
+      - name: 5. Publicar
+        id: publicar
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          DESTINO: ${{ steps.destino.outputs.branch }}
+        run: |
+          set -o pipefail
+          npx --yes wrangler@4.151.3 pages deploy public \
+            --project-name feedbackhub-demo \
+            --branch "$DESTINO" | tee salida.txt
+          # Wrangler imprime la URL fija de la rama ("alias") y la URL única de este despliegue
+          url=$(grep -oE 'Deployment alias URL: https://[^ ]+' salida.txt | sed 's/.*: //' || true)
+          if [ -z "$url" ]; then
+            url=$(grep -oE 'Take a peek over at https://[^ ]+' salida.txt | sed 's/.* //')
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Publicado en: $url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 6. Dejar la URL de preview en el PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          URL: ${{ steps.publicar.outputs.url }}
+        with:
+          script: |
+            const marca = '<!-- preview-feedbackhub -->';
+            const cuerpo = `${marca}\n🔎 **Preview de este PR (staging):** ${process.env.URL}\n\n` +
+              'Pruébalo como lo vería un usuario antes de aprobar el merge.';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comentarios = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const anterior = comentarios.find((c) => c.body && c.body.includes(marca));
+            if (anterior) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: anterior.id, body: cuerpo });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body: cuerpo });
+            }
