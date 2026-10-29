@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FeedbackHub · Panel de administración</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="panel">
+  <div id="banner" class="banner">STAGING · entorno de pruebas</div>
+
+  <!-- Login (Supabase Auth, email y contraseña) -->
+  <div class="container login" id="vistaLogin">
+    <h1>Panel de administración</h1>
+    <p class="subtitle">Acceso solo para administradores de FeedbackHub</p>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" autocomplete="current-password" required>
+      </div>
+      <button type="submit" id="entrar">Entrar</button>
+      <div id="avisoLogin" class="message" role="status"></div>
+    </form>
+  </div>
+
+  <!-- Panel (solo tras iniciar sesión) -->
+  <div class="container oculto" id="vistaPanel">
+    <div class="cabecera-panel">
+      <h1>Panel de administración</h1>
+      <div>
+        <span class="usuario" id="usuario"></span>
+        <button class="secundario" id="salir">Cerrar sesión</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card"><h3>Total de feedback</h3><div class="number" id="total">0</div></div>
+      <div class="stat-card"><h3>Últimas 24 h</h3><div class="number" id="ultimas24">0</div></div>
+      <div class="stat-card"><h3>Valoración media</h3><div class="number" id="media">–</div></div>
+    </div>
+
+    <div id="avisoPanel" class="message" role="status"></div>
+
+    <table class="feedback-table" id="tabla">
+      <thead>
+        <tr><th>Fecha</th><th>Nombre</th><th>Email</th><th>Valoración</th><th>Mensaje</th></tr>
+      </thead>
+      <tbody id="filas"></tbody>
+    </table>
+  </div>
+
+  <script type="module" src="/admin.js"></script>
+</body>
+</html>
